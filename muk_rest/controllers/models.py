@@ -237,14 +237,7 @@ class ModelController(http.Controller):
     @tools.security.protected(operations=['create'])
     def create(self, model, values=None, context=None, **kw):
         ctx = request.session.context.copy()
-        if request.mimetype == 'application/json' and \
-            request.method in ('POST', 'PUT'):
-            data = request.get_data().decode(request.charset)
-            ctx.update(context and parse_value(data, {}))
-            # self.params.update(parse_value(data, {}))
-            request.session.context = ctx
-        else:
-            ctx.update(context and parse_value(context) or {})               
+        ctx.update(context and parse_value(context) or {})
         values = values and parse_value(values) or {}
         model = request.env[model].with_context(ctx)
         result = model.create(values).ids
@@ -261,15 +254,7 @@ class ModelController(http.Controller):
     @tools.security.protected(operations=['write'])
     def write(self, model, ids=None, values=None, context=None, **kw):
         ctx = request.session.context.copy()
-        if request.mimetype == 'application/json' and \
-            request.method in ('POST', 'PUT'):
-            data = request.get_data().decode(request.charset)
-            ctx.update(context and parse_value(data, {}))
-            # self.params.update(parse_value(data, {}))
-            request.session.context = ctx
-        else:
-            ctx.update(context and parse_value(context) or {})               
-
+        ctx.update(context and parse_value(context) or {})
         ids = ids and parse_value(ids) or []
         values = values and parse_value(values) or {}
         records = request.env[model].with_context(ctx).browse(ids)

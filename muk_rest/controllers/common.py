@@ -88,16 +88,8 @@ class RestfulController(http.Controller):
         endpoint = kw.get('custom', False)
         if endpoint and endpoint.exists():
             ctx = request.session.context.copy()
-            if request.mimetype == 'application/json' and \
-                request.method in ('POST', 'PUT'):
-                data = request.get_data().decode(request.charset)
-                ctx.update(context and parse_value(data, {}))
-                # self.params.update(parse_value(data, {}))
-                request.session.context = ctx
-                return endpoint.with_context(ctx)
-            else:
-                ctx.update(context and parse_value(context) or {})               
-                return endpoint.with_context(ctx).evaluate(request.params)
+            ctx.update(context and parse_value(context) or {})
+            return endpoint.with_context(ctx).evaluate(request.params)
         return exceptions.NotFound()
     
     #----------------------------------------------------------
@@ -386,24 +378,3 @@ class RestfulController(http.Controller):
             content = json.dumps(result, sort_keys=True, indent=4, cls=ResponseEncoder)
             response = Response(content, content_type='application/json;charset=utf-8', status=200) 
         return response
-
-def parse_value(value, default=None, raise_exception=False):
-    if not value:
-        return default
-    if isinstance(value, (list, dict)):
-        return value
-    exception = None
-    try:
-        try:
-            return json.loads(value)
-        except json.decoder.JSONDecodeError as exc:
-            if isinstance(value, str):
-                value = value.replace('true', 'True')
-                value = value.replace('false', 'False')
-                value = value.replace('null', 'None')
-            exception = exc
-            return ast.literal_eval(value)
-    except Exception as exc:
-        if raise_exception:
-            raise (exception or exc)
-        return default
